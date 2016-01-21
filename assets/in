@@ -1,0 +1,7 @@
+#!/bin/sh
+
+. ./common.sh
+
+init
+
+fetch-status

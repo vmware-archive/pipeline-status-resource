@@ -1,0 +1,31 @@
+#!/bin/sh
+
+. ./common.sh
+
+init
+
+if [ -f failing-builds.json ] ; then
+	mv failing-builds.json old-failing-builds.json
+fi
+
+fetch-status
+
+print_date_as_version() {
+	echo "[ \"$(date)\" ]"
+}
+
+if [ -f old-failing-builds.json ]; then
+	old_failing_builds="$(cat old-failing-builds.json)"
+	new_failing_builds="$(cat failing-builds.json)"
+	old_contains_new=$(echo "$old_failing_builds" | jq "contains($new_failing_builds)")
+
+	if [ "$old_contains_new" != "true" ]; then
+		print_date_as_version
+	elif [ "$new_failing_builds" = "[]" ]; then
+		print_date_as_version
+	else 
+		echo "[]"
+	fi
+else
+	print_date_as_version
+fi
