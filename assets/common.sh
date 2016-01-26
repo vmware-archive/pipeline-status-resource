@@ -31,6 +31,6 @@ init() {
 
 fetch_status() {
 	pushd /opt/go
-	./runme -host="$HOST" -user="$USER" -password="$PASSWORD" "$PIPELINE_WHITELIST"
+	./runme -host="$HOST" -user="$USER" -password="$PASSWORD" $PIPELINE_WHITELIST
 	popd
 }
