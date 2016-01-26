@@ -30,7 +30,7 @@ func main() {
   api := concourse.NewApi(rd)
   ps := api.GetPipelines()
 
-  var failingBuilds []concourse.MetadataElement
+  failingBuilds := []concourse.MetadataElement{}
 
   for _, p := range ps {
     if !p.Paused {
