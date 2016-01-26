@@ -1,31 +1,34 @@
-#!/bin/sh
+#!/bin/bash
 
 . "$(dirname "$0")"/common.sh
 
 init
 
-if [ -f failing-builds.json ] ; then
-	mv failing-builds.json old-failing-builds.json
-fi
-
-fetch-status
+fetch_status
 
 print_date_as_version() {
-	echo "[ \"$(date)\" ]"
+	if [ -f /opt/go/failing-builds.json ] ; then
+		mv /opt/go/failing-builds.json /opt/go/old-failing-builds.json
+	fi
+
+	echo "[ { \"date\": \"$(date +"%s")\" } ]" >&3
 }
 
-if [ -f old-failing-builds.json ]; then
-	old_failing_builds="$(cat old-failing-builds.json)"
-	new_failing_builds="$(cat failing-builds.json)"
+new_failing_builds="$(cat /opt/go/failing-builds.json)"
+if [ -f /opt/go/old-failing-builds.json ]; then
+	old_failing_builds="$(cat /opt/go/old-failing-builds.json)"
+fi
+
+if [ -z "$old_failing_builds" ]; then
+	print_date_as_version
+elif [ "$(echo "$new_failing_builds" | jq 'length')" = "0" ]; then
+	print_date_as_version
+else
 	old_contains_new=$(echo "$old_failing_builds" | jq "contains($new_failing_builds)")
 
-	if [ "$old_contains_new" != "true" ]; then
-		print_date_as_version
-	elif [ "$new_failing_builds" = "[]" ]; then
-		print_date_as_version
+	if [ "$old_contains_new" = "true" ]; then
+		echo "[]" >&3
 	else 
-		echo "[]"
+		print_date_as_version
 	fi
-else
-	print_date_as_version
 fi

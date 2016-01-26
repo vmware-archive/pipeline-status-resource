@@ -5,6 +5,8 @@ import (
   "fmt"
   "io/ioutil"
   "flag"
+  "encoding/json"
+  "strconv"
 )
 
 func main() {
@@ -28,19 +30,19 @@ func main() {
   api := concourse.NewApi(rd)
   ps := api.GetPipelines()
 
-  var failingBuildNames []string
-  var failingBuildIds []int
+  var failingBuilds []concourse.MetadataElement
 
   for _, p := range ps {
     if !p.Paused {
       for _, pipelineInWhitelist := range PIPELINE_WHITELIST {
-        if p == pipelineInWhitelist {
+        if p.Name == pipelineInWhitelist {
           jobs := api.GetJobs(p.Name)
           for _, j := range jobs {
             s := j.FinishedBuild.Status
             if s != "" && s != "succeeded" {
-              failingBuildNames = append(failingBuildNames, fmt.Sprintf("%s = %s", j.Name, s))
-              failingBuildIds = append(failingBuildIds, j.Id)
+              buildId := strconv.Itoa(j.FinishedBuild.Id)
+              statusAndName := j.FinishedBuild.Status + " = " + j.Name
+              failingBuilds = append(failingBuilds, concourse.MetadataElement{buildId, statusAndName})
             }
           }
         }
@@ -48,20 +50,16 @@ func main() {
     }
   }
 
-  var jsonString string
-
-  if len(failures) == 0 {
+  if len(failingBuilds) == 0 {
     fmt.Println("All Jobs have Succeeded")
   } else {
     fmt.Println("Failing jobs detected:")
-    for _, f := range failures {
+    for _, f := range failingBuilds {
       fmt.Println(f)
     }
   }
 
-  jsonString = json.Marshal(failingBuildIds)
-
-  bytes := []byte(jsonString)
+  bytes, _ := json.Marshal(failingBuilds)
 
   err := ioutil.WriteFile("failing-builds.json", bytes, 0644)
 

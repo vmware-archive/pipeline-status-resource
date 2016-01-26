@@ -1,7 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
 . "$(dirname "$0")"/common.sh
 
 init
 
-fetch-status
+fetch_status
+
+mkdir -p "$1"
+
+cp /opt/go/failing-builds.json "$1"
+
+echo "{ \"version\": { \"date\": \"$LAST_CHECK_DATE\" }, \"metadata\": $(cat /opt/go/failing-builds.json) }" >&3

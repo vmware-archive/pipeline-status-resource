@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 init() {
-	set -e
+	set -ex
 
 	exec 3>&1 # make stdout available as fd 3 for the result
 	exec 1>&2 # redirect all output to stderr for logging
@@ -24,13 +24,13 @@ init() {
 
 	export PIPELINE_WHITELIST
 	PIPELINE_WHITELIST=$(jq -r '.source.pipeline_whitelist // ""' < "$payload")
+
+	export LAST_CHECK_DATE
+	LAST_CHECK_DATE=$(jq -r '.version.date // ""' < "$payload")
 }
 
-fetch-status() {
-	apt-get -qq install golang
-	cd concourse-status-hue
-	export GOPATH
-	GOPATH=$(pwd)
-	go build -o runme ./concourse.go
+fetch_status() {
+	pushd /opt/go
 	./runme -host="$HOST" -user="$USER" -password="$PASSWORD" "$PIPELINE_WHITELIST"
+	popd
 }
