@@ -21,14 +21,20 @@ fi
 
 if [ -z "$old_failing_builds" ]; then
 	print_date_as_version
-elif [ "$(echo "$new_failing_builds" | jq 'length')" = "0" ]; then
-	print_date_as_version
 else
-	old_contains_new=$(echo "$old_failing_builds" | jq "contains($new_failing_builds)")
+	if [ "$(echo "$new_failing_builds" | jq 'length')" = "0" ]; then
+		if [ "$(echo "$old_failing_builds" | jq 'length')" != "0" ]; then
+			print_date_as_version
+		else
+			echo "[]" >&3
+		fi
+	else
+		old_contains_new=$(echo "$old_failing_builds" | jq "contains($new_failing_builds)")
 
-	if [ "$old_contains_new" = "true" ]; then
-		echo "[]" >&3
-	else 
-		print_date_as_version
+		if [ "$old_contains_new" = "true" ]; then
+			echo "[]" >&3
+		else 
+			print_date_as_version
+		fi
 	fi
 fi
